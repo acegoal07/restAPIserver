@@ -26,7 +26,7 @@ class API
                !isset($_POST['name']) ||
                strlen($_POST['name']) > 64 ||
                !isset($_POST['comment']) ||
-               strlen($_POST['comment']) > 255) {
+               strlen($_POST['comment']) === 0) {
                   http_response_code(400);
                } else {
                   $this->handlePost();
