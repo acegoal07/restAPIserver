@@ -21,19 +21,28 @@ class API
       } else {
          switch ($_SERVER['REQUEST_METHOD']) {
             case 'POST':
-               if (!isset($_POST['oid']) ||
-               strlen($_POST['oid']) > 32 ||
-               !isset($_POST['name']) ||
-               strlen($_POST['name']) > 64 ||
-               !isset($_POST['comment']) ||
-               strlen($_POST['comment']) === 0) {
+               if (
+                  !isset($_POST['oid']) ||
+                  strlen($_POST['oid']) > 32 ||
+                  strlen($_POST['oid']) === 0 ||
+
+                  !isset($_POST['name']) ||
+                  strlen($_POST['name']) > 64 ||
+                  strlen($_POST['name'] === 0) ||
+
+                  !isset($_POST['comment']) ||
+                  strlen($_POST['comment']) === 0
+               ) {
                   http_response_code(400);
                } else {
                   $this->handlePost();
                }
                break;
             case 'GET':
-               if (!isset($_GET['oid']) || strlen($_GET['oid']) > 32) {
+               if (
+                  !isset($_GET['oid']) ||
+                  strlen($_GET['oid']) > 32
+               ) {
                   http_response_code(400);
                } else {
                   $this->handleGet();
@@ -49,13 +58,15 @@ class API
    public function handlePost()
    {
       try {
-         $oid = $_POST['oid'];
-         $name = $_POST['name'];
-         $comment = $_POST['comment'];
          $id = null;
-         if ($this->conn->query("INSERT INTO `comments`(`oid`, `name`, `comment`) VALUES ('$oid', '$name','$comment')")) {
+
+         $stmt = $this->conn->prepare("INSERT INTO `comments`(`oid`, `name`, `comment`) VALUES (?, ?, ?)");
+         $stmt->bind_param("sss", $_POST['oid'], $_POST['name'], $_POST['comment']);
+
+         if ($stmt->execute()) {
             $id = $this->conn->insert_id;
          }
+
          $response["id"] = $id;
          if (http_response_code(201)) {
             echo json_encode($response);
@@ -69,7 +80,12 @@ class API
    {
       try {
          $oid = $_GET['oid'];
-         $result = $this->conn->query("SELECT `id`, `date`, `name`, `comment` FROM comments where `oid` = $oid");
+
+         $stmt = $this->conn->prepare("SELECT `id`, `date`, `name`, `comment` FROM comments where `oid` = ?");
+         $stmt->bind_param("s", $oid);
+         $stmt->execute();
+
+         $result = $stmt->get_result();
          $data = array();
          if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
@@ -77,6 +93,7 @@ class API
             }
          }
          $result->close();
+
          $response["oid"] = $oid;
          $response["comments"] = $data;
          if (http_response_code(201)) {
