@@ -25,6 +25,7 @@ class API
                   !isset($_POST['oid']) ||
                   strlen($_POST['oid']) > 32 ||
                   strlen($_POST['oid']) === 0 ||
+                  !ctype_alnum($_POST['oid']) ||
 
                   !isset($_POST['name']) ||
                   strlen($_POST['name']) > 64 ||
@@ -41,7 +42,9 @@ class API
             case 'GET':
                if (
                   !isset($_GET['oid']) ||
-                  strlen($_GET['oid']) > 32
+                  strlen($_GET['oid']) > 32 ||
+                  strlen($_POST['oid']) === 0 ||
+                  !ctype_alnum($_POST['oid'])
                ) {
                   http_response_code(400);
                } else {
