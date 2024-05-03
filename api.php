@@ -68,11 +68,11 @@ class API
 
          if ($stmt->execute()) {
             $id = $this->conn->insert_id;
-         }
-
-         $response["id"] = $id;
-         if (http_response_code(201)) {
+            $response["id"] = $id;
+            http_response_code(201);
             echo json_encode($response);
+         } else {
+            http_response_code(500);
          }
       } catch (Exception $e) {
          http_response_code(500);
@@ -86,21 +86,22 @@ class API
 
          $stmt = $this->conn->prepare("SELECT `id`, `date`, `name`, `comment` FROM comments where `oid` = ?");
          $stmt->bind_param("s", $oid);
-         $stmt->execute();
-
-         $result = $stmt->get_result();
-         $data = array();
-         if ($result->num_rows > 0) {
-            while ($row = $result->fetch_assoc()) {
-               array_push($data, $row);
+         if ($stmt->execute()) {
+            $result = $stmt->get_result();
+            $data = array();
+            if ($result->num_rows > 0) {
+               while ($row = $result->fetch_assoc()) {
+                  array_push($data, $row);
+               }
             }
-         }
-         $result->close();
+            $result->close();
 
-         $response["oid"] = $oid;
-         $response["comments"] = $data;
-         if (http_response_code(201)) {
+            $response["oid"] = $oid;
+            $response["comments"] = $data;
+            http_response_code(201);
             echo json_encode($response);
+         } else {
+            http_response_code(500);
          }
       } catch (Exception $e) {
          http_response_code(500);
